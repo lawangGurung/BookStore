@@ -1,6 +1,7 @@
 using Bulky.DataAccess;
 using Bulky.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MyApp.Namespace
 {
@@ -16,11 +17,20 @@ namespace MyApp.Namespace
         public IActionResult Index()
         {
             List<Product> productList = _unitOfWork.Product.GetAll().ToList();
+            
             return View(productList);
         }
 
         public IActionResult Create()
         {
+            IEnumerable<SelectListItem> CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem 
+            {
+                Text = u.Name,
+                Value = u.Id.ToString()
+            });
+
+            // just a key value pair where ViewBag.CategoryList is key and CategoryList is the value.
+            ViewBag.CategoryList = CategoryList;
             return View();
         }
 
