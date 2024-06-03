@@ -21,7 +21,7 @@ namespace MyApp.Namespace
             return View(productList);
         }
 
-        public IActionResult Create()
+        public IActionResult Upsert(int? id)
         {
             
 
@@ -38,12 +38,26 @@ namespace MyApp.Namespace
                 Product = new Product()
             };
 
+            if(id == null || id == 0)
+            {
+                //Create
+                return View(productVM);
+            }
+            else 
+            {
+                //Update
+                Product? product = _unitOfWork.Product.Get(u => u.Id == id);
 
-            return View(productVM);
+                if(product is not null)
+                {
+                    productVM.Product = product;
+                }
+                return View(productVM);
+            }
         }
 
         [HttpPost]
-        public IActionResult Create(ProductVM productVM)
+        public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
@@ -66,40 +80,6 @@ namespace MyApp.Namespace
 
         }
 
-        public IActionResult Edit(int? id)
-        {
-            if(id == null || id == 0)
-            {
-                return NotFound();
-            }
-
-            Product? productFromDb = _unitOfWork.Product.Get(u => u.Id == id);
-
-            if(productFromDb == null)
-            {
-                return NotFound();
-            }
-
-            return View(productFromDb);
-        }
-
-        [HttpPost]
-
-        public IActionResult Edit(Product obj)
-        {
-            if (ModelState.IsValid)
-            {
-                _unitOfWork.Product.Update(obj);
-                _unitOfWork.Save();
-                TempData["success"] = "Product updated successfully!";
-                return RedirectToAction("Index");
-            }
-            else 
-            {
-
-                return View();
-            }
-        }
 
         public IActionResult Delete(int? id)
         {
