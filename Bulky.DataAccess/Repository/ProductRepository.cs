@@ -13,6 +13,6 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public void Update(Product obj)
     {
-        _db.Update(obj);
+        _db.Products.Update(obj);
     }
 }

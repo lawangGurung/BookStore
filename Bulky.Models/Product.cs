@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Bulky.Models;
 
@@ -36,7 +37,8 @@ public class Product
     public double Price100 { get; set; }
     public int CategoryId { get; set; }
     [ForeignKey("CategoryId")]
+    [ValidateNever]
     public Category Category { get; set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    [ValidateNever]
     public string ImageUrl { get; set; }
 }
