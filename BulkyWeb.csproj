@@ -24,6 +24,7 @@
   <ItemGroup>
     <Folder Include="Areas/Admin/Views/Product/" />
     <Folder Include="Views/Category/" />
+    <Folder Include="wwwroot/images/products/" />
     <!-- <ProjectReference Include="Bulky.DataAccess/Bulky.DataAccess.csproj" /> -->
   </ItemGroup>
 
