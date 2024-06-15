@@ -13,7 +13,7 @@ public class Repository<T> : IRepository<T> where T : class
         _db = db;
         dbSet = _db.Set<T>();
         //dbSet == _db.Categories
-        _db.Products.Include(u => u.Category).Include(u => u.CategoryId);
+        // _db.Products.Include(u => u.Category).Include(u => u.CategoryId);
     }
     public void Add(T entity)
     {
