@@ -1,10 +1,11 @@
 ﻿using Bulky.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bulky.DataAccess.Data;
 
-public class ApplicationDbContext : IdentityDbContext
+public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 {
       //Instance of DbContextOptions has informations regarding connectionstring, Database provider etc which the
       // entity framework require to establish a database.
