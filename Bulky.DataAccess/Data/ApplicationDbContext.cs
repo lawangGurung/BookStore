@@ -28,6 +28,36 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
                 new Category() {Id = 3, Name = "SciFi", DisplayOrder = 3}
         );
 
+        modelBuilder.Entity<Company>().HasData(
+            new Company() {
+                Id = 1,
+                Name = "Hindustan Uniliver",
+                StreetAddress = "123 Street Jack",
+                City = "Kolkota",
+                State = "West Bengal",
+                PostalCode = "34526",
+                PhoneNumber = "77890657023"
+            },
+            new Company() {
+                Id = 2,
+                Name = "Penguin LTD",
+                StreetAddress = "Jackson Road",
+                City = "Siliguri",
+                State = "Mumbai",
+                PostalCode = "45332",
+                PhoneNumber = "4385023415"
+            },
+            new Company() {
+                Id = 3,
+                Name = "Cafee Book",
+                StreetAddress = "Jahan Mandir",
+                City = "Gangtok",
+                State = "Sikkim",
+                PostalCode = "728839",
+                PhoneNumber = "4829342561"
+            }
+        );
+
         modelBuilder.Entity<Product>().HasData(
                 new Product { 
                 Id = 1, 
