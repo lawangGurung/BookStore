@@ -52,12 +52,14 @@ public class HomeController : Controller
         {
             //shopping cart exist
             cartFromDb.Count += shoppingCart.Count;
-            // _unitOfWork.ShoppingCart.Update(cartFromDb);
+            _unitOfWork.ShoppingCart.Update(cartFromDb);
+            TempData["success"] = "Shopping Cart Updated Successfully!";
         }
         else
         {
             //shopping cart does not exist
             _unitOfWork.ShoppingCart.Add(shoppingCart);
+            TempData["success"] = "New Product Added to Shopping Cart!";
         }
         _unitOfWork.Save();
 

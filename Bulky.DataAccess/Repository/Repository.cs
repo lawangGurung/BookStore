@@ -20,19 +20,31 @@ public class Repository<T> : IRepository<T> where T : class
         dbSet.Add(entity);
     }
 
-    public T? Get(Expression<Func<T, bool>> filter, string? includeProperties = null)
+    public T? Get(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false)
     {
-        IQueryable<T> query = dbSet;
-        query = query.Where(filter);
-        if (!string.IsNullOrEmpty(includeProperties))
+        IQueryable<T> query; 
+        if (tracked)
         {
-            foreach (var includeProp in includeProperties
-                .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                query.Include(includeProp);
-            }
+            query = dbSet;
         }
-        return query.FirstOrDefault();
+        else
+        {
+            query = dbSet.AsNoTracking();
+            
+        }
+        
+        query = query.Where(filter);
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProp in includeProperties
+                    .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query.Include(includeProp);
+                }
+            }
+
+            return query.FirstOrDefault();
+        
     }
     
     //Category, CategoryId
