@@ -2,6 +2,8 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Bulky.Models;
 using Bulky.DataAccess;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BulkyWeb.Areas.Customer.Controllers;
 
@@ -25,10 +27,42 @@ public class HomeController : Controller
 
     public IActionResult Details(int ProductId)
     {
-        Product? product = _unitOfWork.Product.Get(u => u.Id == ProductId, includeProperties: "Category");
-        return View(product);
+        ShoppingCart cart = new ShoppingCart() {
+            ProductId = ProductId,
+            Product = _unitOfWork.Product.Get(u => u.Id == ProductId, includeProperties: "Category"),
+            Count = 1
+        };
+        return View(cart);
     }
+    [HttpPost]
+    [Authorize]
+    public IActionResult Details(ShoppingCart shoppingCart)
+    {
+        var claimsIdentity = (ClaimsIdentity?) User.Identity;
+        var userId = claimsIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        shoppingCart.ApplicationUserId = userId;
+
+
+        //we have to find if the shopping cart exist or not 
+        ShoppingCart? cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == userId
+        && u.ProductId == shoppingCart.ProductId);
+
+        if (cartFromDb != null)
+        {
+            //shopping cart exist
+            cartFromDb.Count += shoppingCart.Count;
+            // _unitOfWork.ShoppingCart.Update(cartFromDb);
+        }
+        else
+        {
+            //shopping cart does not exist
+            _unitOfWork.ShoppingCart.Add(shoppingCart);
+        }
+        _unitOfWork.Save();
+
+        return RedirectToAction(nameof(Index));
+    }
     public IActionResult Privacy()
     {
         return View();
