@@ -36,6 +36,11 @@ namespace MyApp.Namespace
             return View(ShoppingCartVM);
         }
 
+        public IActionResult Summary()
+        {
+            return View();
+        }
+
         public IActionResult Plus(int cartId)
         {
             var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
@@ -80,7 +85,7 @@ namespace MyApp.Namespace
             }
             return RedirectToAction(nameof(Index));
         }
-        
+
         private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
         {
             if(shoppingCart.Product != null)
