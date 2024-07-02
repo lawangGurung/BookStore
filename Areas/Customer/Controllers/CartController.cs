@@ -82,7 +82,7 @@ namespace MyApp.Namespace
                  ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
                  includeProperties: "Product");
 
-                ShoppingCartVM.OrderHeader.OrderDate = System.DateTime.Now;
+                ShoppingCartVM.OrderHeader.OrderDate = DateTime.Now;
                 ShoppingCartVM.OrderHeader.ApplicationUserId = userId;
 
                 ApplicationUser? applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
@@ -175,6 +175,29 @@ namespace MyApp.Namespace
 
         public IActionResult OrderConfirmation(int id)
         {
+            OrderHeader? orderFromDb = _unitOfWork.OrderHeader.Get(u => u.Id == id, includeProperties: "ApplicationUser");
+            if(orderFromDb != null)
+            {
+                if(orderFromDb.PaymentStatus != SD.PaymentStatusDelayedPayement)
+                {
+                    //this is the order by the customer
+                    var service = new SessionService();
+                    var session = service.Get(orderFromDb.SessionId);
+
+                    if (session.PaymentStatus.ToLower() == "paid")
+                    {
+                        _unitOfWork.OrderHeader.UpdateStripePaymentID(id, session.Id, session.PaymentIntentId);
+                        _unitOfWork.OrderHeader.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
+                        _unitOfWork.Save();
+                    }
+
+                }
+
+                List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == orderFromDb.ApplicationUserId).ToList();
+                _unitOfWork.ShoppingCart.RemoveRange(shoppingCarts);
+                _unitOfWork.Save();
+            }
+
             return View(id);
         }
 
