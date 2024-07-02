@@ -5,6 +5,7 @@ using Bulky.Models;
 using Bulky.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe.Checkout;
 
 namespace MyApp.Namespace
 {
@@ -68,7 +69,7 @@ namespace MyApp.Namespace
             }
             return View(ShoppingCartVM);
         }
-        
+
         [HttpPost]
         [ActionName("Summary")]
         public IActionResult SummaryPOST()
@@ -127,7 +128,42 @@ namespace MyApp.Namespace
                 {
                     //it is a regular customer account and we need to capture payment
                     // stripe LOGIC
+                    string domain = "http://localhost:5217/";
 
+                     
+                    var options = new SessionCreateOptions
+                    {
+                        SuccessUrl = domain + $"Customer/Cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
+                        CancelUrl = domain + "Customer/Cart/Index",
+                        LineItems = new List<SessionLineItemOptions>(),
+                        Mode = "payment",
+                    };
+
+                    foreach(var item in ShoppingCartVM.ShoppingCartList)
+                    {
+                        var sessionLineItem = new SessionLineItemOptions {
+                            PriceData = new SessionLineItemPriceDataOptions {
+                                UnitAmount = (long)(item.Price * 100), //$20.50 ==> 2050
+                                Currency = "usd",
+                                ProductData = new SessionLineItemPriceDataProductDataOptions {
+                                    Name = item?.Product?.Title
+                                }
+                            },
+                            
+                            Quantity = item?.Count
+                        };
+
+                        options.LineItems.Add(sessionLineItem);
+                    }
+                    var service = new SessionService();
+                    Session session = service.Create(options);
+
+                    _unitOfWork.OrderHeader.UpdateStripePaymentID(ShoppingCartVM.OrderHeader.Id, session.Id, session.PaymentIntentId);
+                    _unitOfWork.Save();
+
+                    //Redirect to Stripe for making payments
+                    Response.Headers.Append("Location", session.Url);
+                    return new StatusCodeResult(303);
 
                 }
 
