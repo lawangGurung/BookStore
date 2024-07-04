@@ -4,6 +4,7 @@ using Bulky.Models;
 using Bulky.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 using Stripe.Climate;
 
 namespace MyApp.Namespace
@@ -112,6 +113,38 @@ namespace MyApp.Namespace
                }  
             }
             return RedirectToAction(nameof(Details), new{orderId = OrderVM?.OrderHeader?.Id});
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult CancelOrder()
+        {
+            if(OrderVM?.OrderHeader is not null)
+            {
+                var orderFromDb = _unitOfWork.OrderHeader.Get(o => o.Id == OrderVM.OrderHeader.Id);
+                if(orderFromDb != null)
+                {
+                    if(orderFromDb.PaymentStatus == SD.PaymentStatusApproved)
+                    {
+                        var options = new RefundCreateOptions{
+                            Reason = RefundReasons.RequestedByCustomer,
+                            PaymentIntent = orderFromDb.PaymentIntentId
+                        };
+
+                        var service = new RefundService();
+                        Refund refund = service.Create(options);
+                        _unitOfWork.OrderHeader.UpdateStatus(orderFromDb.Id, SD.StatusCancelled, SD.StatusRefunded);
+                    }
+                    else
+                    {
+                        _unitOfWork.OrderHeader.UpdateStatus(orderFromDb.Id, SD.StatusCancelled, SD.StatusCancelled);
+                    }
+
+                    _unitOfWork.Save();
+                    TempData["success"] = "Order Cancelled Successfully!";
+                }
+            }
+            return RedirectToAction(nameof(Details), new {orderId = OrderVM?.OrderHeader?.Id});
         }
 
          #region API CALLS
