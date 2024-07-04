@@ -2,6 +2,10 @@
 @model OrderVM
 
 <form method="post">
+    @if(@Model?.OrderHeader is not null)
+    {
+        <input asp-for="@Model.OrderHeader.Id" hidden />
+    }
     <br />
     <div class="container">
         <div class="card">
@@ -27,7 +31,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Name</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -44,7 +48,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Phone</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -61,7 +65,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Address</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -78,7 +82,7 @@
                             <div class="row my-1">
                                 <div class="col-3">City</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -95,7 +99,7 @@
                             <div class="row my-1">
                                 <div class="col-3">State</div>
                                 <div class="col-9">
-                                    @if(Model.OrderHeader is not null)
+                                    @if(Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -113,7 +117,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Zip Code</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -131,7 +135,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Email</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null && @Model.OrderHeader.ApplicationUser is not null)
+                                    @if(@Model?.OrderHeader is not null && @Model.OrderHeader.ApplicationUser is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         { 
@@ -148,7 +152,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Order Date</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                    {
                                         <input value="@Model.OrderHeader.OrderDate.ToShortDateString()" type="text" readonly class="form-control" />
                                    } 
@@ -157,7 +161,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Carrier</div>
                                 <div class="col-9">
-                                    @if(@Model.OrderHeader is not null)
+                                    @if(@Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -175,7 +179,7 @@
                             <div class="row my-1">
                                 <div class="col-3">Tracking</div>
                                 <div class="col-9">
-                                    @if(Model.OrderHeader is not null)
+                                    @if(Model?.OrderHeader is not null)
                                     {
                                         @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                                         {
@@ -253,7 +257,7 @@
                             </div>
                             @if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
                             {
-                                <input type="submit" class="btn btn-warning form-control my-1" value="Update Order Details" />
+                                <button type="submit" asp-action="UpdateOrderDetails" class="btn btn-warning form-control my-1" >UPDATE ORDER DETAILS</button>
                             }
 
                         </div>
