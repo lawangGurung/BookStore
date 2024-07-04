@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Bulky.DataAccess;
 using Bulky.Models;
 using Bulky.Utility;
@@ -76,7 +77,19 @@ namespace MyApp.Namespace
             [HttpGet]
             public IActionResult GetAll(string status)
             {
-                IEnumerable<OrderHeader> objOrderList = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+                IEnumerable<OrderHeader> objOrderList; 
+
+                if(User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
+                {
+                   objOrderList = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+                }
+                else
+                {
+                    var claimsIdentity = (ClaimsIdentity?) User.Identity;
+                    var userId = claimsIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                    objOrderList = _unitOfWork.OrderHeader.GetAll(o => o.ApplicationUserId == userId, includeProperties: "ApplicationUser");
+                }
 
                 switch(status) {
                     case "pending" :
