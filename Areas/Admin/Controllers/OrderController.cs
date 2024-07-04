@@ -14,10 +14,25 @@ namespace MyApp.Namespace
         {
             _unitOfWork = unitOfWork;
         } 
-        public ActionResult Index()
+        public IActionResult Index()
         {
             return View();
         }
+
+        public IActionResult Details(int orderId)
+        {
+            OrderVM orderVM  = new OrderVM() {
+                OrderHeader = _unitOfWork.OrderHeader.Get(u => u.Id == orderId, includeProperties: "ApplicationUser"),
+                OrderDetail = _unitOfWork.OrderDetail.GetAll(u => u.OrderHeaderId == orderId, includeProperties: "Product")
+            };
+
+            if(orderVM.OrderHeader is not null)
+            {
+                orderVM.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == orderVM.OrderHeader.ApplicationUserId);
+            }
+            return View(orderVM);
+        }
+
          #region API CALLS
 
             [HttpGet]

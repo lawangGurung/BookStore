@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Bulky.Models;
 
-public class ApplicationUser:IdentityUser
+public class ApplicationUser : IdentityUser
 {
     [Required]
     public string? Name { get; set; }
