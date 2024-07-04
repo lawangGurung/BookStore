@@ -5,7 +5,7 @@ using Bulky.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
-using Stripe.Climate;
+using Stripe.Checkout;
 
 namespace MyApp.Namespace
 {
@@ -146,6 +146,100 @@ namespace MyApp.Namespace
             }
             return RedirectToAction(nameof(Details), new {orderId = OrderVM?.OrderHeader?.Id});
         }
+        [ActionName("Details")]
+        [HttpPost]
+        [Authorize(Roles =SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult Details_PAY_NOW()
+        {
+            if(OrderVM?.OrderHeader != null)
+            {
+                OrderVM.OrderHeader = _unitOfWork.OrderHeader
+                    .Get(o => o.Id == OrderVM.OrderHeader.Id, includeProperties: "ApplicationUser");
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                OrderVM.OrderDetail = _unitOfWork.OrderDetail
+                    .GetAll(o => o.OrderHeaderId == OrderVM.OrderHeader.Id, includeProperties: "Product");
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
+                    //it is a regular customer account and we need to capture payment
+                    // stripe LOGIC
+                    string domain = "http://localhost:5217/";
+
+                     
+                    var options = new SessionCreateOptions
+                    {
+                        SuccessUrl = domain + $"Admin/Order/PaymentConfirmation?orderHeaderid={OrderVM?.OrderHeader?.Id}",
+                        CancelUrl = domain + $"Admin/Order/Details?orderId={OrderVM?.OrderHeader?.Id}",
+                        LineItems = new List<SessionLineItemOptions>(),
+                        Mode = "payment",
+                    };
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                foreach (var item in OrderVM.OrderDetail)
+                    {
+                        var sessionLineItem = new SessionLineItemOptions {
+                            PriceData = new SessionLineItemPriceDataOptions {
+                                UnitAmount = (long)(item.Price * 100), //$20.50 ==> 2050
+                                Currency = "usd",
+                                ProductData = new SessionLineItemPriceDataProductDataOptions {
+                                    Name = item?.Product?.Title
+                                }
+                            },
+                            
+                            Quantity = item?.Count
+                        };
+
+                        options.LineItems.Add(sessionLineItem);
+                    }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
+                var service = new SessionService();
+                Session session = service.Create(options);
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+
+                _unitOfWork.OrderHeader.UpdateStripePaymentID(OrderVM.OrderHeader.Id, session.Id, session.PaymentIntentId);
+
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
+                _unitOfWork.Save();
+
+                    //Redirect to Stripe for making payments
+                    Response.Headers.Append("Location", session.Url);
+                    return new StatusCodeResult(303);
+
+            }
+             
+            return RedirectToAction(nameof(Details), new {orderId = OrderVM?.OrderHeader?.Id});
+        }
+
+        public IActionResult PaymentConfirmation(int orderHeaderId)
+        {
+            OrderHeader? orderFromDb = _unitOfWork.OrderHeader.Get(u => u.Id == orderHeaderId);
+            if(orderFromDb != null)
+            {
+                if(orderFromDb.PaymentStatus == SD.PaymentStatusDelayedPayement)
+                {
+                    //this is the order by the Company
+                    var service = new SessionService();
+                    var session = service.Get(orderFromDb.SessionId);
+
+                    if (session.PaymentStatus.ToLower() == "paid")
+                    {
+                        _unitOfWork.OrderHeader.UpdateStripePaymentID(orderHeaderId, session.Id, session.PaymentIntentId);
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                        _unitOfWork.OrderHeader.UpdateStatus(orderHeaderId, orderFromDb.OrderStatus, SD.PaymentStatusApproved);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                        _unitOfWork.Save();
+                    }
+
+                }
+
+                _unitOfWork.Save();
+            }
+
+            return View(orderHeaderId);
+        }   
 
          #region API CALLS
 
