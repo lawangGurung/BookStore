@@ -9,6 +9,7 @@ using Stripe.Climate;
 namespace MyApp.Namespace
 {
     [Area("Admin")]
+    [Authorize]
     public class OrderController : Controller
     {
         // GET: OrderController
@@ -70,6 +71,47 @@ namespace MyApp.Namespace
                 }
             }
             return RedirectToAction(nameof(Details), new {orderId = OrderVM?.OrderHeader?.Id});
+        }
+
+        [HttpPost]
+        [Authorize(Roles=SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult StartProcessing()
+        {
+            if(OrderVM?.OrderHeader is not null)
+            {
+                _unitOfWork.OrderHeader.UpdateStatus(OrderVM.OrderHeader.Id, SD.StatusInProcess);
+                _unitOfWork.Save();
+                TempData["success"] = "Order Details Update sucessfully!";
+            }
+            return RedirectToAction(nameof(Details), new{orderId = OrderVM?.OrderHeader?.Id});
+        }
+
+        [HttpPost]
+        [Authorize(Roles=SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult ShipOrder()
+        {
+            if(OrderVM?.OrderHeader is not null)
+            {
+               var orderFromDb = _unitOfWork.OrderHeader.Get(o => o.Id == OrderVM.OrderHeader.Id);
+               
+               if(orderFromDb != null)
+               {
+                    orderFromDb.TrackingStatus = OrderVM.OrderHeader.TrackingStatus;
+                    orderFromDb.Carrier = OrderVM.OrderHeader.Carrier;
+                    orderFromDb.OrderStatus = SD.StatusShipped;
+                    orderFromDb.ShippingDate = DateTime.Now;
+
+                    if(orderFromDb.PaymentStatus == SD.PaymentStatusDelayedPayement)
+                    {
+                        orderFromDb.PaymentDueDate = DateOnly.FromDateTime(DateTime.Now.AddDays(30)); 
+                    }
+
+                    _unitOfWork.OrderHeader.Update(orderFromDb);
+                    _unitOfWork.Save();
+                    TempData["success"] = "Order Shipped Sucessfully";      
+               }  
+            }
+            return RedirectToAction(nameof(Details), new{orderId = OrderVM?.OrderHeader?.Id});
         }
 
          #region API CALLS
