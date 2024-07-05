@@ -227,9 +227,10 @@ namespace MyApp.Namespace
                     if (session.PaymentStatus.ToLower() == "paid")
                     {
                         _unitOfWork.OrderHeader.UpdateStripePaymentID(orderHeaderId, session.Id, session.PaymentIntentId);
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                        _unitOfWork.OrderHeader.UpdateStatus(orderHeaderId, orderFromDb.OrderStatus, SD.PaymentStatusApproved);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                        if(orderFromDb.OrderStatus is not null)
+                        {
+                            _unitOfWork.OrderHeader.UpdateStatus(orderHeaderId, orderFromDb.OrderStatus, SD.PaymentStatusApproved);
+                        }
                         _unitOfWork.Save();
                     }
 

@@ -4,6 +4,7 @@ using Bulky.Models;
 using Bulky.DataAccess;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Bulky.Utility;
 
 namespace BulkyWeb.Areas.Customer.Controllers;
 
@@ -53,15 +54,25 @@ public class HomeController : Controller
             //shopping cart exist
             cartFromDb.Count += shoppingCart.Count;
             _unitOfWork.ShoppingCart.Update(cartFromDb);
+            _unitOfWork.Save();
             TempData["success"] = "Shopping Cart Updated Successfully!";
+
         }
         else
         {
             //shopping cart does not exist
             _unitOfWork.ShoppingCart.Add(shoppingCart);
-            TempData["success"] = "New Product Added to Shopping Cart!";
+            _unitOfWork.Save();
+             TempData["success"] = "New Product Added to Shopping Cart!";
+            
+            //for inserting the count in session
+            HttpContext.Session.SetInt32(SD.SessionCart,
+             _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId).Count());
+            
         }
-        _unitOfWork.Save();
+
+        
+
 
         return RedirectToAction(nameof(Index));
     }

@@ -4,6 +4,7 @@ using Bulky.DataAccess;
 using Bulky.Models;
 using Bulky.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Checkout;
 
@@ -222,6 +223,8 @@ namespace MyApp.Namespace
                if(cartFromDb.Count <= 1)
                {
                     _unitOfWork.ShoppingCart.Remove(cartFromDb);
+                    HttpContext.Session.SetInt32(SD.SessionCart,
+                        _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
                }
                else
                {
@@ -241,6 +244,10 @@ namespace MyApp.Namespace
             if(cartFromDb is not null)
             {
                 _unitOfWork.ShoppingCart.Remove(cartFromDb);
+
+                HttpContext.Session.SetInt32(SD.SessionCart, 
+                    _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
+
                 _unitOfWork.Save();
             }
             return RedirectToAction(nameof(Index));
